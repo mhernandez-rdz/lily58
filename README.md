@@ -23,7 +23,8 @@ Configuración personalizada para teclado Lily58 con trackpad Cirque Pinnacle us
 - ✅ **Home Row Mods:** Modificadores en la fila home (Shift, Ctrl, Alt, GUI)
 - ✅ **Caps Lock:** Tecla dedicada en la fila home (posición tradicional)
 - ✅ **Acentos españoles:** Triple tap en vocales (aaa=á, eee=é, iii=í, ooo=ó, uuu=ú, nnn=ñ)
-- ✅ **Teclas multimedia:** Control de volumen, brillo y reproducción en capa LOWER
+- ✅ **Teclas multimedia:** Control de volumen, brillo y reproducción en capas LOWER y RAISE
+- ✅ **Print Screen:** Disponible en ambas capas (LOWER y RAISE)
 - ✅ **Compose Key:** Ctrl derecho para caracteres especiales (¿, ¡)
 
 ### Trackpad Cirque Pinnacle
@@ -196,7 +197,7 @@ qmk compile -kb lily58/rev1 -km miguel
 
 ```
 .-------------------------------------------------------------.                    .-------------------------------------------------------------.
-|       |       |       |       | Bri-  | Bri+  |            |                    |            | Stop  | Play  | Mute  | Vol-  | Vol+  |       |
+|       |       |       |       | Bri-  | Bri+  |            |                    |            | Stop  | Play  | Mute  | Vol-  | Vol+  | PrtSc |
 |-------+-------+-------+-------+-------+-------|            |                    |            |-------+-------+-------+-------+-------+-------|
 |  F1   |  F2   |  F3   |  F4   |  F5   |  F6   |            |                    |            |  F7   |  F8   |  F9   |  F10  |  F11  |  F12  |
 |-------+-------+-------+-------+-------+-------|            |                    |            |-------+-------+-------+-------+-------+-------|
@@ -209,15 +210,16 @@ qmk compile -kb lily58/rev1 -km miguel
 ```
 
 **Multimedia:**
-- **Brillo:** LOWER + 5/6 (lado izq)
+- **Brillo:** LOWER + 4/5 (lado izq)
 - **Reproducción:** LOWER + 6/7/8 (lado der) - Stop, Play, Mute
 - **Volumen:** LOWER + 9/0 (lado der) - Bajar, Subir
+- **Print Screen:** LOWER + ` (esquina superior derecha)
 
-### Capa RAISE (Números y Navegación)
+### Capa RAISE (Números, Navegación y Multimedia)
 
 ```
 .-------------------------------------------------------------.                    .-------------------------------------------------------------.
-|       |       |       |       |       |       |            |                    |            |       |       |       |       |       |       |
+|       |       |       |       | Bri-  | Bri+  |            |                    |            | Stop  | Play  | Mute  | Vol-  | Vol+  | PrtSc |
 |-------+-------+-------+-------+-------+-------|            |                    |            |-------+-------+-------+-------+-------+-------|
 |   `   |   1   |   2   |   3   |   4   |   5   |            |                    |            |   6   |   7   |   8   |   9   |   0   |       |
 |-------+-------+-------+-------+-------+-------|            |                    |            |-------+-------+-------+-------+-------+-------|
@@ -232,6 +234,9 @@ qmk compile -kb lily58/rev1 -km miguel
 **Navegación Vim-style:**
 - Las teclas de dirección están en la posición home right (HJKL) para no mover la mano
 - Compatible con Home Row Mods: puedes usar Shift+Arrow, Ctrl+Arrow, etc.
+
+**Multimedia (también disponibles en RAISE):**
+- Mismas teclas que en LOWER para acceso simétrico desde ambas capas
 
 ### Capa ADJUST (LOWER + RAISE)
 

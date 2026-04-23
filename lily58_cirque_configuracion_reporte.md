@@ -62,15 +62,14 @@
 
 ---
 
-✅ **`POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE`**
-- **Tu valor:** Habilitado
+❌ **`POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE`**
+- **Tu valor:** Deshabilitado
 - **Default QMK:** Deshabilitado
-- **Status:** ✨ ACTIVADO - Cursor con inercia
+- **Status:** ❌ DESACTIVADO - Sin inercia del cursor
 - **¿Qué hace?** Añade física de inercia al cursor:
   - Si mueves el dedo rápido y lo levantas, el cursor continúa moviéndose un poco antes de detenerse (como si tuviera momentum)
   - La velocidad de desaceleración es configurable
-- **¿Por qué activarlo?** Hace que el cursor se sienta más natural y fluido, como deslizar en una pantalla táctil. También reduce la necesidad de mover grandes distancias con el dedo.
-- **¿Cuándo desactivarlo?** Si prefieres control preciso absoluto sin movimiento extra.
+- **¿Por qué está desactivado?** El usuario lo encontró incómodo y prefiere control preciso absoluto sin movimiento extra.
 
 ---
 
@@ -233,17 +232,17 @@ CIRQUE_PINNACLE_Y_UPPER (default: 1471)
 |---------|----------|--------------|
 | **Modo Absoluto** | Posición exacta del dedo | Mueves dedo = cursor va a esa posición |
 | **Tap to Click** | Clic sin presionar | Toca rápido = clic izquierdo |
-| **Cursor Glide** | Inercia del cursor | Desliza rápido = cursor continúa moviéndose |
-| **Scroll Circular** | Scroll con gestos | Círculos en borde = scroll (⚠️ solo horizontal) |
+| **Scroll Circular** | Scroll con gestos | Círculos en borde = scroll |
+| **Atenuación 2X** | Alta sensibilidad | Optimizado para overlay rígido cóncavo |
 
 ### 🔲 **DISPONIBLES PERO DESACTIVADAS:**
 | Feature | Qué haría | Por qué activarla |
 |---------|-----------|-------------------|
+| **Cursor Glide** | Inercia del cursor | Si prefieres cursor con momentum |
 | **Secondary Tap** | Clic derecho por tap | Clic derecho sin teclas |
 | **Side Scroll** | Scroll IntelliSense | Scroll tradicional lateral |
 | **Auto Mouse Layer** | Capa automática al tocar | Teclas cambian con trackpad |
 | **Curved Overlay** | Optimización para overlay curvo | Si tienes burbuja protectora |
-| **Atenuación 2X** | Más sensibilidad | Si no detecta bien los toques |
 
 ### ⚙️ **PARÁMETROS AJUSTABLES:**
 | Parámetro | Default | Qué controla |
@@ -285,9 +284,10 @@ CIRQUE_PINNACLE_Y_UPPER (default: 1471)
 #define CIRQUE_PINNACLE_ADDR 0x2A
 #define CIRQUE_PINNACLE_POSITION_MODE CIRQUE_PINNACLE_ABSOLUTE_MODE
 #define CIRQUE_PINNACLE_DIAMETER_MM 40
+#define CIRQUE_PINNACLE_ATTENUATION EXTREG__TRACK_ADCCONFIG__ADC_ATTENUATE_2X
 #define CIRQUE_PINNACLE_TAP_ENABLE
 #define POINTING_DEVICE_GESTURES_SCROLL_ENABLE
-#define POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE
+// #define POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE  // ← DESACTIVADO (incómodo)
 // #define POINTING_DEVICE_ROTATION_90      // ← COMENTADO (sin rotación)
 // #define POINTING_DEVICE_INVERT_X         // ← COMENTADO (sin inversión)
 // #define POINTING_DEVICE_INVERT_Y         // ← COMENTADO (sin inversión)
@@ -307,8 +307,8 @@ EXTRAKEY_ENABLE = yes
 
 ### Funcionalidades del Teclado Lily58 (no trackpad):
 - ✅ Space y Enter intercambiados
-- ✅ Caps Lock con doble tap en Shift
-- ✅ Triple tap en vocales para acentos españoles (aaa=á, eee=é, etc.)
+- ✅ Caps Lock con tecla dedicada (KC_CAPS en fila home)
+- ✅ Triple tap en vocales (eee=é, iii=í, ooo=ó, uuu=ú, nnn=ñ). La A usa Compose Key por ser Home Row Mod Shift.
 - ✅ Teclas multimedia en LOWER layer
 - ✅ Compose Key en Ctrl derecho
 

@@ -231,6 +231,42 @@ layer_state_t layer_state_set_user(layer_state_t state) {
   return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
 }
 
+// Variable para rastrear si agregamos el botón derecho
+static bool we_added_right_click = false;
+
+// Modificar comportamiento del trackpad con Shift
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+  // Detectar si cualquier Shift está activo (dedicado o home row mod)
+  bool shift_active = get_mods() & MOD_MASK_SHIFT;
+
+  if (shift_active) {
+    // PRIORIDAD 1: Shift + tap trackpad = Clic derecho
+    if (mouse_report.buttons & MOUSE_BTN1) {
+      mouse_report.buttons &= ~MOUSE_BTN1;  // Quitar clic izquierdo
+      mouse_report.buttons |= MOUSE_BTN2;   // Agregar clic derecho
+      we_added_right_click = true;
+    }
+    // Si ya no hay tap, limpiar el clic derecho que agregamos
+    else if (we_added_right_click) {
+      mouse_report.buttons &= ~MOUSE_BTN2;  // Limpiar clic derecho
+      we_added_right_click = false;
+    }
+
+    // PRIORIDAD 2: Shift + mover (sin tap) = Drag (clic sostenido)
+    if (mouse_report.x != 0 || mouse_report.y != 0) {
+      mouse_report.buttons |= MOUSE_BTN1;   // Mantener clic izquierdo
+    }
+  } else {
+    // Si Shift no está activo, limpiar flag
+    if (we_added_right_click) {
+      mouse_report.buttons &= ~MOUSE_BTN2;
+      we_added_right_click = false;
+    }
+  }
+
+  return mouse_report;
+}
+
 //SSD1306 OLED update loop, make sure to enable OLED_ENABLE=yes in rules.mk
 #ifdef OLED_ENABLE
 

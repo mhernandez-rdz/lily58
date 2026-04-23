@@ -22,7 +22,7 @@ Configuración personalizada para teclado Lily58 con trackpad Cirque Pinnacle us
 - ✅ **Layout personalizado:** Space y Enter intercambiados en los pulgares
 - ✅ **Home Row Mods:** Modificadores en la fila home (Shift, Ctrl, Alt, GUI)
 - ✅ **Caps Lock:** Tecla dedicada en la fila home (posición tradicional)
-- ✅ **Acentos españoles:** Triple tap en vocales (aaa=á, eee=é, iii=í, ooo=ó, uuu=ú, nnn=ñ)
+- ✅ **Acentos españoles:** Triple tap en vocales (eee=é, iii=í, ooo=ó, uuu=ú, nnn=ñ). La **A** usa Compose Key (RCtrl + ' + a) porque es tecla Home Row Mod Shift.
 - ✅ **Teclas multimedia:** Control de volumen, brillo y reproducción en capas LOWER y RAISE
 - ✅ **Print Screen:** Disponible en ambas capas (LOWER y RAISE)
 - ✅ **Compose Key:** Ctrl derecho para caracteres especiales (¿, ¡)
@@ -190,7 +190,8 @@ qmk compile -kb lily58/rev1 -km miguel
 
 **Otras teclas especiales:**
 - **CAPS Lock:** Tecla dedicada en fila home (lado izquierdo)
-- **Vocales (A, E, I, O, U) y N:** Triple tap = Carácter acentuado (aaa=á)
+- **Vocales (E, I, O, U) y N:** Triple tap = Carácter acentuado (eee=é, nnn=ñ)
+- **A con acento:** Compose Key (RCtrl + ' + a) → á. La tecla A es Home Row Mod Shift, por lo que no puede tener Tap Dance.
 - **RCtrl:** Compose Key para ¿ y ¡
 
 ### Capa LOWER (Símbolos y Multimedia)

@@ -152,13 +152,25 @@ qmk compile -kb lily58/rev1 -km miguel
 - Contiene los layouts de las 4 capas: QWERTY, LOWER, RAISE, ADJUST
 - Define los Tap Dance para acentos españoles
 - Implementa las funciones de Home Row Mods (get_tapping_term, get_quick_tap_term)
-- Código OLED
+- **Código OLED** (`oled_task_user()`, `oled_init_user()`)
+- Lógica del trackpad (`pointing_device_task_user()`)
 
 **Líneas importantes:**
 - Línea 11-18: Enum de Tap Dance (solo vocales y ñ, NO hay TD_LSHIFT_CAPS)
 - Línea 95-102: Definiciones de Tap Dance
 - Línea 121-127: QWERTY layer con Home Row Mods
 - Línea 195-228: Funciones de timing para Home Row Mods
+- Línea 270-305: Código OLED (renderizado por mitad)
+
+### lib/ (Librerías OLED)
+Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
+- `layer_state_reader.c` — Nombre de la capa activa
+- `keylogger.c` — Última tecla presionada + historial de 20 teclas
+- `logo_reader.c` — Logo QMK renderizado en la pantalla izquierda
+- `host_led_state_reader.c` — Estado de Caps/Num/Scroll Lock
+- `mode_icon_reader.c` — Icono de modo Mac/Windows
+- `rgb_state_reader.c` — Estado del RGB (modo, hue, sat, val)
+- `timelogger.c` — Tiempo entre pulsaciones
 
 ### config.h
 - Configuración de Home Row Mods (líneas 23-28)
@@ -196,6 +208,19 @@ qmk compile -kb lily58/rev1 -km miguel
 1. Para timing global: edita TAPPING_TERM en config.h (línea 24)
 2. Para timing por tecla: edita get_tapping_term() en keymap.c (línea 195-211)
 3. QUICK_TAP_TERM en config.h (línea 27) controla repetición rápida
+
+### Si el usuario quiere modificar la pantalla OLED:
+1. Edita `oled_task_user()` en `keymap.c` (líneas 291–304)
+2. Funciones disponibles en `lib/`:
+   - `read_layer_state()` — capa activa
+   - `read_keylog()` / `read_keylogs()` — última tecla e historial
+   - `read_logo()` — logo QMK
+   - `read_host_led_state()` — estado Caps/Num/Scroll Lock
+   - `read_mode_icon(swap)` — icono Mac/Windows
+   - `read_timelog()` — timing entre teclas
+   - `read_rgb_info()` — estado RGB (requiere RGBLIGHT_ENABLE)
+3. Para agregar nuevas funciones: crea archivo en `lib/` y agrégalo a `SRC` en `rules.mk`
+4. Para evitar burn-in: agrega `#define OLED_TIMEOUT 30000` en `config.h`
 
 ## 🔍 Debugging
 

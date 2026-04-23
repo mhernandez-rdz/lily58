@@ -363,9 +363,58 @@ Para evitar activaciones accidentales y optimizar la experiencia, se configuraro
 
 ---
 
+## 📟 Pantalla OLED
+
+El Lily58 incluye una **pantalla OLED SSD1306 de 128×32 píxeles** en la mitad izquierda del teclado (offhand). La pantalla está **activada** (`OLED_ENABLE = yes`) y muestra información útil en tiempo real.
+
+### ¿Qué muestra cada mitad?
+
+| Mitad | Tipo | Contenido actual |
+|-------|------|------------------|
+| **Derecha (master)** | Información activa | Capa actual (`Layer: Base` / `Lower` / `Raise` / `Adjust`)<br>Última tecla presionada (`fila x columna, código : letra`)<br>Historial de las últimas 20 teclas |
+| **Izquierda (offhand)** | Logo estático | Logo QMK (girado 180° para orientación correcta) |
+
+### Archivos relacionados
+
+```
+keymap/
+├── keymap.c              # oled_task_user() — lógica de renderizado
+├── rules.mk              # OLED_ENABLE = yes, SRC += ./lib/*.c
+└── lib/                  # Librerías OLED (compiladas como parte del keymap)
+    ├── layer_state_reader.c   # Nombre de la capa activa
+    ├── keylogger.c            # Última tecla + historial
+    ├── logo_reader.c          # Logo QMK
+    ├── host_led_state_reader.c # Estado Caps/Num/Scroll Lock (no usado actualmente)
+    ├── mode_icon_reader.c      # Icono Mac/Windows (no usado actualmente)
+    ├── rgb_state_reader.c      # Estado RGB (requiere RGBLIGHT_ENABLE)
+    └── timelogger.c            # Timing entre pulsaciones (no usado actualmente)
+```
+
+### Funciones disponibles pero no activas
+
+Estas funciones ya están declaradas en `keymap.c` y listas para usar. Solo hay que **descomentar** las líneas correspondientes en `oled_task_user()`:
+
+- `read_host_led_state()` — Muestra si **Caps Lock**, **Num Lock** o **Scroll Lock** están activos
+- `read_mode_icon(swap)` — Muestra icono de modo **Mac** o **Windows**
+- `read_timelog()` — Muestra tiempo transcurrido entre pulsaciones
+
+### Posibles mejoras futuras
+
+| Mejora | Descripción | Archivos a modificar |
+|--------|-------------|---------------------|
+| **Timeout de apagado** | Apagar OLED tras X segundos de inactividad (evita burn-in) | `config.h` — agregar `#define OLED_TIMEOUT 30000` |
+| **Fade out** | Apagado gradual suave | `config.h` — `#define OLED_FADE_OUT` |
+| **Scroll del logo** | Logo izquierdo se desplaza horizontalmente | `keymap.c` — agregar `oled_scroll_left()` en offhand |
+| **WPM** | Palabras por minuto en pantalla | `rules.mk` — `WPM_ENABLE = yes` + función custom en `keymap.c` |
+| **Logo personalizado** | Reemplazar logo QMK por diseño propio | `lib/logo_reader.c` o fuente custom `glcdfont_lily.c` |
+| **Brillo ajustable** | Reducir/aumentar brillo de la pantalla | `config.h` — `#define OLED_BRIGHTNESS 128` (0–255) |
+
+---
+
 ## 📚 Documentación Adicional
 
 - **Guía completa de configuración:** Ver `lily58_cirque_configuracion_reporte.md`
+- **QMK OLED Docs:** https://docs.qmk.fm/features/oled_driver
 - **QMK Docs:** https://docs.qmk.fm/
 - **Cirque Pinnacle:** https://docs.qmk.fm/features/pointing_device
 

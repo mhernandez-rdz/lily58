@@ -153,6 +153,7 @@ qmk compile -kb lily58/rev1 -km miguel
 - Define los Tap Dance para acentos españoles
 - Implementa las funciones de Home Row Mods (get_tapping_term, get_quick_tap_term)
 - **Código OLED** (`oled_task_user()`, `oled_init_user()`)
+- **4 bitmaps PROGMEM** (`byakko_logo[]`, `seiryu_logo[]`, `suzaku_logo[]`, `genbu_logo[]`)
 - Lógica del trackpad (`pointing_device_task_user()`)
 
 **Líneas importantes:**
@@ -160,22 +161,26 @@ qmk compile -kb lily58/rev1 -km miguel
 - Línea 95-102: Definiciones de Tap Dance
 - Línea 121-127: QWERTY layer con Home Row Mods
 - Línea 195-228: Funciones de timing para Home Row Mods
-- Línea 270-305: Código OLED (renderizado por mitad)
+- Línea 234-469: Bitmaps OLED de las 4 bestias divinas (512 bytes cada uno)
+- Línea 470-485: Código OLED con switch por capa (`oled_task_user()`)
 
 ### lib/ (Librerías OLED)
 Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
-- `layer_state_reader.c` — Nombre de la capa activa
-- `keylogger.c` — Última tecla presionada + historial de 20 teclas
-- `logo_reader.c` — Logo QMK renderizado en la pantalla izquierda
-- `host_led_state_reader.c` — Estado de Caps/Num/Scroll Lock
-- `mode_icon_reader.c` — Icono de modo Mac/Windows
-- `rgb_state_reader.c` — Estado del RGB (modo, hue, sat, val)
-- `timelogger.c` — Tiempo entre pulsaciones
+- `layer_state_reader.c` — Nombre de la capa activa (usado en pantalla derecha)
+- `keylogger.c` — Última tecla presionada + historial de 20 teclas (pantalla derecha)
+- `logo_reader.c` — Logo QMK (respaldo, no usado actualmente)
+- `host_led_state_reader.c` — Estado de Caps/Num/Scroll Lock (no usado)
+- `mode_icon_reader.c` — Icono de modo Mac/Windows (no usado)
+- `rgb_state_reader.c` — Estado del RGB (requiere RGBLIGHT_ENABLE)
+- `timelogger.c` — Tiempo entre pulsaciones (no usado)
+
+**Nota:** Las imágenes actuales (bestias divinas) no usan `lib/`. Son arrays de bytes `PROGMEM` embebidos directamente en `keymap.c` y se dibujan con `oled_write_raw_P()`.
 
 ### config.h
 - Configuración de Home Row Mods (líneas 23-28)
-- Configuración del trackpad Cirque (líneas 48-58)
-- MASTER_RIGHT (línea 46)
+- Configuración del trackpad Cirque (líneas 50-58)
+- `MASTER_RIGHT` (línea 46)
+- `SPLIT_LAYER_STATE_ENABLE` (línea 49) — **Sincroniza estado de capa al lado offhand**
 - RGB lighting (líneas 30-45)
 
 ### rules.mk
@@ -210,17 +215,28 @@ Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
 3. QUICK_TAP_TERM en config.h (línea 27) controla repetición rápida
 
 ### Si el usuario quiere modificar la pantalla OLED:
-1. Edita `oled_task_user()` en `keymap.c` (líneas 291–304)
-2. Funciones disponibles en `lib/`:
+
+#### Opción A: Cambiar las bestias divinas por otras imágenes
+1. Prepara una imagen de 320×427 (o similar) en `~/Pictures/nombre.jpg`
+2. Usa el script de conversión (ver `scripts/` o pedir ayuda) para generar el array OLED
+3. Reemplaza el array correspondiente en `keymap.c` (`byakko_logo[]`, `seiryu_logo[]`, etc.)
+4. Asegúrate de usar `oled_write_raw_P(array, sizeof(array))` en `oled_task_user()`
+
+#### Opción B: Usar las librerías de texto en `lib/`
+1. Edita `oled_task_user()` en `keymap.c` (líneas 470–485)
+2. Funciones disponibles:
    - `read_layer_state()` — capa activa
    - `read_keylog()` / `read_keylogs()` — última tecla e historial
    - `read_logo()` — logo QMK
    - `read_host_led_state()` — estado Caps/Num/Scroll Lock
    - `read_mode_icon(swap)` — icono Mac/Windows
    - `read_timelog()` — timing entre teclas
-   - `read_rgb_info()` — estado RGB (requiere RGBLIGHT_ENABLE)
 3. Para agregar nuevas funciones: crea archivo en `lib/` y agrégalo a `SRC` en `rules.mk`
-4. Para evitar burn-in: agrega `#define OLED_TIMEOUT 30000` en `config.h`
+
+#### Configuraciones útiles en `config.h`:
+- `SPLIT_LAYER_STATE_ENABLE` — sincroniza capa al lado offhand (ya activo)
+- `#define OLED_TIMEOUT 30000` — apaga OLED tras 30 segundos de inactividad
+- `#define OLED_BRIGHTNESS 128` — ajusta brillo (0–255)
 
 ## 🔍 Debugging
 
@@ -242,9 +258,21 @@ Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
 - Aumenta TAPPING_TERM en config.h
 - Ajusta tiempos específicos en get_tapping_term()
 
+### OLED no cambia de bestia al cambiar de capa:
+- Verifica que `SPLIT_LAYER_STATE_ENABLE` esté definido en `config.h`
+- Si cambiaste `config.h`, haz `qmk clean -a` antes de compilar
+- Asegúrate de flashear **ambos lados** del teclado
+- Verifica que el switch en `oled_task_user()` use `layer_state` (no `get_highest_layer()`)
+
+### OLED se ve distorsionado o incompleto:
+- El array debe tener exactamente **512 bytes** (128×32 / 8)
+- El formato debe ser **vertical SSD1306** (page addressing), no horizontal
+- Usa `oled_write_raw_P(array, sizeof(array))`, no `oled_write()`
+
 ## 📚 Referencias
 
 - **QMK Docs:** https://docs.qmk.fm/
+- **QMK OLED Driver:** https://docs.qmk.fm/features/oled_driver
 - **Cirque Pinnacle:** https://docs.qmk.fm/features/pointing_device
 - **Tap Dance:** https://docs.qmk.fm/features/tap_dance
 - **Home Row Mods:** https://precondition.github.io/home-row-mods
@@ -259,6 +287,6 @@ Miguel prefiere:
 
 ---
 
-**Última actualización:** 2026-04-17
+**Última actualización:** 2026-04-24
 
-**Estado actual:** Configuración estable. Usuario está probando sensibilidad 2X del trackpad durante varios días para evaluar detección de scroll.
+**Estado actual:** Configuración estable con OLED personalizado. Las 4 bestias divinas (白虎/青龍/朱雀/玄武) se muestran dinámicamente según la capa activa. Trackpad funcionando con sensibilidad 2X.

@@ -372,23 +372,52 @@ El Lily58 incluye una **pantalla OLED SSD1306 de 128×32 píxeles** en la mitad 
 | Mitad | Tipo | Contenido actual |
 |-------|------|------------------|
 | **Derecha (master)** | Información activa | Capa actual (`Layer: Base` / `Lower` / `Raise` / `Adjust`)<br>Última tecla presionada (`fila x columna, código : letra`)<br>Historial de las últimas 20 teclas |
-| **Izquierda (offhand)** | Logo estático | Logo QMK (girado 180° para orientación correcta) |
+| **Izquierda (offhand)** | Logo dinámico por capa | Bestia divina según la capa activa (ver tabla abajo) |<br><br>#### Bestias divinas por capa
+
+| Capa | Bestia | Significado |
+|------|--------|-------------|
+| **QWERTY (Base)** | 白虎 (Byakko) | Tigre Blanco — Oeste |
+| **LOWER** | 青龍 (Seiryu) | Dragón Azul — Este |
+| **RAISE** | 朱雀 (Suzaku) | Fénix Rojo — Sur |
+| **ADJUST** | 玄武 (Genbu) | Tortuga Negra — Norte |
 
 ### Archivos relacionados
 
 ```
 keymap/
 ├── keymap.c              # oled_task_user() — lógica de renderizado
+│                         #   + 4 arrays PROGMEM con bitmaps de las bestias
 ├── rules.mk              # OLED_ENABLE = yes, SRC += ./lib/*.c
 └── lib/                  # Librerías OLED (compiladas como parte del keymap)
     ├── layer_state_reader.c   # Nombre de la capa activa
     ├── keylogger.c            # Última tecla + historial
-    ├── logo_reader.c          # Logo QMK
+    ├── logo_reader.c          # Logo QMK (respaldo, no usado actualmente)
     ├── host_led_state_reader.c # Estado Caps/Num/Scroll Lock (no usado actualmente)
     ├── mode_icon_reader.c      # Icono Mac/Windows (no usado actualmente)
     ├── rgb_state_reader.c      # Estado RGB (requiere RGBLIGHT_ENABLE)
     └── timelogger.c            # Timing entre pulsaciones (no usado actualmente)
 ```
+
+### Cómo funcionan los bitmaps
+
+Los 4 logos son **arrays de 512 bytes** (`128 cols × 32 rows / 8 bits`) almacenados en `PROGMEM` dentro de `keymap.c`:
+
+- `byakko_logo[]` → Capa QWERTY
+- `seiryu_logo[]` → Capa LOWER
+- `suzaku_logo[]` → Capa RAISE
+- `genbu_logo[]` → Capa ADJUST
+
+Cada imagen fue generada desde una foto JPEG (`~/Pictures/*.jpg`), redimensionada a 128×32, convertida a blanco y negro, y codificada en formato **vertical SSD1306** (page addressing).
+
+### Sincronización entre mitades
+
+Para que el OLED izquierdo (offhand) sepa en qué capa está el teclado, se activó en `config.h`:
+
+```c
+#define SPLIT_LAYER_STATE_ENABLE
+```
+
+Esto fuerza a QMK a transmitir el estado de capa desde la mitad derecha (master) hacia la izquierda (offhand) en cada ciclo.
 
 ### Funciones disponibles pero no activas
 
@@ -406,8 +435,9 @@ Estas funciones ya están declaradas en `keymap.c` y listas para usar. Solo hay 
 | **Fade out** | Apagado gradual suave | `config.h` — `#define OLED_FADE_OUT` |
 | **Scroll del logo** | Logo izquierdo se desplaza horizontalmente | `keymap.c` — agregar `oled_scroll_left()` en offhand |
 | **WPM** | Palabras por minuto en pantalla | `rules.mk` — `WPM_ENABLE = yes` + función custom en `keymap.c` |
-| **Logo personalizado** | Reemplazar logo QMK por diseño propio | `lib/logo_reader.c` o fuente custom `glcdfont_lily.c` |
 | **Brillo ajustable** | Reducir/aumentar brillo de la pantalla | `config.h` — `#define OLED_BRIGHTNESS 128` (0–255) |
+| **Timer de layer** | Mostrar nombre de capa durante 5 segundos al cambiar, luego volver a la bestia | `keymap.c` — usar `timer_read()` + variable de estado |
+| **Nuevos bitmaps** | Cambiar las bestias por otros diseños (imágenes, texto, símbolos) | Reemplazar arrays en `keymap.c` con `oled_write_raw_P()` |
 
 ---
 

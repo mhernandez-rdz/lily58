@@ -45,6 +45,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_VAL_STEP 17
 #define MASTER_RIGHT
 
+// Sincronizar estado de capas entre ambas mitades del teclado split
+// Necesario para que el OLED del lado izquierdo (offhand) sepa qué capa está activa
+#define SPLIT_LAYER_STATE_ENABLE
+
 // Cirque Trackpad Configuration
 #define CIRQUE_PINNACLE_ADDR 0x2A
 #define CIRQUE_PINNACLE_POSITION_MODE CIRQUE_PINNACLE_ABSOLUTE_MODE

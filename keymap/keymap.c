@@ -196,7 +196,7 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case LSFT_T(KC_A):
         case LSFT_T(KC_SCLN):
-            return TAPPING_TERM + 50;  // Shift gets a bit more time
+            return TAPPING_TERM - 20;  // Shift gets reduced time for faster response (180ms)
         case LGUI_T(KC_F):
         case LGUI_T(KC_J):
             return TAPPING_TERM + 30;  // GUI gets slightly more time
@@ -224,6 +224,21 @@ uint16_t get_quick_tap_term(uint16_t keycode, keyrecord_t *record) {
             return QUICK_TAP_TERM;
         default:
             return 0;
+    }
+}
+
+// Hold on other key press per key - activar hold inmediatamente para Shift
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        // Para Shift: activar hold INMEDIATAMENTE cuando presiones otra tecla
+        // Esto resuelve el problema de mayúsculas rápidas
+        case LSFT_T(KC_A):
+        case LSFT_T(KC_SCLN):
+            return true;
+        // Para otros mods (Ctrl, Alt, GUI), usar comportamiento por defecto
+        // Esto evita activaciones accidentales en atajos
+        default:
+            return false;
     }
 }
 

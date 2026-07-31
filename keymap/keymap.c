@@ -431,17 +431,17 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
 #ifdef OLED_ENABLE
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-  if (!is_keyboard_master())
-    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
+  // La rotación depende de cómo está montada físicamente cada pantalla, NO de
+  // cuál mitad es la master. Antes esto usaba is_keyboard_master(); al mover el
+  // USB al lado izquierdo eso habría dejado ambos OLED de cabeza.
+  if (is_keyboard_left())
+    return OLED_ROTATION_180;  // la mitad izquierda va montada al revés
   return rotation;
 }
 
 // When you add source files to SRC in rules.mk, you can use functions.
 const char *read_layer_state(void);
 const char *read_logo(void);
-void set_keylog(uint16_t keycode, keyrecord_t *record);
-const char *read_keylog(void);
-const char *read_keylogs(void);
 
 // const char *read_mode_icon(bool swap);
 // const char *read_host_led_state(void);
@@ -450,15 +450,7 @@ const char *read_keylogs(void);
 
 bool oled_task_user(void) {
   if (is_keyboard_master()) {
-    // If you want to change the display of OLED, you need to change here
-    oled_write_ln(read_layer_state(), false);
-    oled_write_ln(read_keylog(), false);
-    oled_write_ln(read_keylogs(), false);
-    //oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
-    //oled_write_ln(read_host_led_state(), false);
-    //oled_write_ln(read_timelog(), false);
-  } else {
-    // Mostrar bestia divina según la capa activa
+    // Mitad IZQUIERDA (master, la del cable USB): bestia divina según la capa.
     // Usar máscaras de bits igual que layer_state_reader.c para máxima compatibilidad
     switch (layer_state) {
       case (1UL << _LOWER):
@@ -475,17 +467,13 @@ bool oled_task_user(void) {
         oled_write_raw_P(byakko_logo, sizeof(byakko_logo));
         break;
     }
+  } else {
+    // Mitad DERECHA (offhand): nombre de la capa activa.
+    // layer_state llega hasta acá gracias a SPLIT_LAYER_STATE_ENABLE.
+    // El keylogger no se puede usar en esta mitad: process_record_user solo
+    // corre en el master, así que aquí nunca tendría datos.
+    oled_write_ln(read_layer_state(), false);
   }
     return false;
 }
 #endif // OLED_ENABLE
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  if (record->event.pressed) {
-#ifdef OLED_ENABLE
-    set_keylog(keycode, record);
-#endif
-    // set_timelog();
-  }
-  return true;
-}

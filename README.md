@@ -321,6 +321,9 @@ Para evitar activaciones accidentales y optimizar la experiencia, se configuraro
 
 ```c
 // En config.h
+#define SPLIT_POINTING_ENABLE   // el trackpad vive en la mitad esclava
+#define POINTING_DEVICE_RIGHT   // ...y esa mitad es la derecha
+
 #define CIRQUE_PINNACLE_ADDR 0x2A
 #define CIRQUE_PINNACLE_POSITION_MODE CIRQUE_PINNACLE_ABSOLUTE_MODE
 #define CIRQUE_PINNACLE_DIAMETER_MM 40
@@ -328,6 +331,8 @@ Para evitar activaciones accidentales y optimizar la experiencia, se configuraro
 #define CIRQUE_PINNACLE_TAP_ENABLE
 #define POINTING_DEVICE_GESTURES_SCROLL_ENABLE
 ```
+
+> **Importante:** el cable USB va en la mitad **izquierda** (master), pero el trackpad está en la **derecha**. `SPLIT_POINTING_ENABLE` hace que la mitad derecha lea el sensor Cirque por I²C y transmita el reporte al master por el cable TRRS. Sin estos dos `#define` el trackpad simplemente no responde.
 
 ### Funciones Habilitadas
 
@@ -365,14 +370,18 @@ Para evitar activaciones accidentales y optimizar la experiencia, se configuraro
 
 ## 📟 Pantalla OLED
 
-El Lily58 incluye una **pantalla OLED SSD1306 de 128×32 píxeles** en la mitad izquierda del teclado (offhand). La pantalla está **activada** (`OLED_ENABLE = yes`) y muestra información útil en tiempo real.
+El Lily58 incluye una **pantalla OLED SSD1306 de 128×32 píxeles** en cada mitad. Están **activadas** (`OLED_ENABLE = yes`) y muestran información en tiempo real.
 
 ### ¿Qué muestra cada mitad?
 
 | Mitad | Tipo | Contenido actual |
 |-------|------|------------------|
-| **Derecha (master)** | Información activa | Capa actual (`Layer: Base` / `Lower` / `Raise` / `Adjust`)<br>Última tecla presionada (`fila x columna, código : letra`)<br>Historial de las últimas 20 teclas |
-| **Izquierda (offhand)** | Logo dinámico por capa | Bestia divina según la capa activa (ver tabla abajo) |<br><br>#### Bestias divinas por capa
+| **Izquierda (master, la del USB)** | Logo dinámico por capa | Bestia divina según la capa activa (ver tabla abajo) |
+| **Derecha (offhand)** | Información activa | Capa actual (`Layer: Base` / `Lower` / `Raise` / `Adjust`) |
+
+> **Nota:** el keylogger (última tecla + historial de 20 teclas) está desactivado. `process_record_user()` solo corre en la mitad master, así que esos datos nunca llegan a la mitad derecha, que es donde ahora vive el panel de texto.
+
+#### Bestias divinas por capa
 
 | Capa | Bestia | Significado |
 |------|--------|-------------|
@@ -411,13 +420,13 @@ Cada imagen fue generada desde una foto JPEG (`~/Pictures/*.jpg`), redimensionad
 
 ### Sincronización entre mitades
 
-Para que el OLED izquierdo (offhand) sepa en qué capa está el teclado, se activó en `config.h`:
+Para que el OLED derecho (offhand) sepa en qué capa está el teclado, se activó en `config.h`:
 
 ```c
 #define SPLIT_LAYER_STATE_ENABLE
 ```
 
-Esto fuerza a QMK a transmitir el estado de capa desde la mitad derecha (master) hacia la izquierda (offhand) en cada ciclo.
+Esto fuerza a QMK a transmitir el estado de capa desde la mitad izquierda (master) hacia la derecha (offhand) en cada ciclo.
 
 ### Funciones disponibles pero no activas
 
@@ -495,7 +504,7 @@ qmk compile -kb lily58/rev1 -km miguel
 
 ### Cambios no se reflejan después de flashear
 
-- Asegúrate de flashear el lado correcto (trackpad está en el derecho)
+- Asegúrate de flashear **ambos lados** (el trackpad está en el derecho, que ahora es la mitad esclava)
 - Haz `qmk clean -a` antes de compilar
 
 ### Sincronización no funciona

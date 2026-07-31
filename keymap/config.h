@@ -43,13 +43,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RGBLIGHT_HUE_STEP 10
 #define RGBLIGHT_SAT_STEP 17
 #define RGBLIGHT_VAL_STEP 17
-#define MASTER_RIGHT
+// El cable USB va a la mitad IZQUIERDA (esta mitad es la master)
+#define MASTER_LEFT
 
 // Sincronizar estado de capas entre ambas mitades del teclado split
-// Necesario para que el OLED del lado izquierdo (offhand) sepa qué capa está activa
+// Necesario para que el OLED de la mitad offhand (derecha) sepa qué capa está activa
 #define SPLIT_LAYER_STATE_ENABLE
 
 // Cirque Trackpad Configuration
+// El trackpad está en la mitad DERECHA, que ahora es la esclava (offhand).
+// SPLIT_POINTING_ENABLE hace que la mitad derecha lea el sensor y mande los
+// datos al master por el cable TRRS; POINTING_DEVICE_RIGHT indica de qué lado está.
+#define SPLIT_POINTING_ENABLE
+#define POINTING_DEVICE_RIGHT
+
 #define CIRQUE_PINNACLE_ADDR 0x2A
 #define CIRQUE_PINNACLE_POSITION_MODE CIRQUE_PINNACLE_ABSOLUTE_MODE
 #define CIRQUE_PINNACLE_DIAMETER_MM 40

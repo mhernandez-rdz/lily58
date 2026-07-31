@@ -13,8 +13,9 @@ Este es un repositorio de configuración de teclado **Lily58** con trackpad **Ci
 ### Hardware
 - **Teclado:** Lily58 (split keyboard, 58 teclas)
 - **Trackpad:** Cirque Pinnacle 40mm (overlay rígido cóncavo)
-- **Master side:** Derecho (trackpad está en el lado derecho)
-- **Conexión:** TRRS cable entre ambos lados
+- **Master side:** **Izquierdo** (el cable USB va a la mitad izquierda)
+- **Trackpad side:** Derecho — o sea, en la mitad **esclava**. Por eso `SPLIT_POINTING_ENABLE` + `POINTING_DEVICE_RIGHT` son obligatorios.
+- **Conexión:** TRRS cable entre ambos lados (transporte serial en D2; el bus I²C queda libre para el Cirque)
 
 ## 📁 Estructura del Proyecto
 
@@ -45,8 +46,9 @@ Este es un repositorio de configuración de teclado **Lily58** con trackpad **Ci
    - Mano izquierda: A/Shift, S/Ctrl, D/Alt, F/GUI
    - Mano derecha: J/GUI, K/Alt, L/Ctrl, ;/Shift
    - Tap = letra, Hold = modificador
-   - TAPPING_TERM: 200ms base (Shift: 250ms, GUI: 230ms)
+   - TAPPING_TERM: 200ms base (Shift: **180ms**, GUI: 230ms)
    - PERMISSIVE_HOLD habilitado
+   - `get_hold_on_other_key_press()` devuelve `true` **solo** para los Shift (A y `;`): hold inmediato al presionar otra tecla, para mayúsculas rápidas
 
 2. **Layout personalizado**
    - Space y Enter **intercambiados** en los pulgares
@@ -76,6 +78,8 @@ Este es un repositorio de configuración de teclado **Lily58** con trackpad **Ci
 ### Trackpad Cirque Pinnacle
 
 ```c
+#define SPLIT_POINTING_ENABLE   // trackpad en la mitad esclava (derecha)
+#define POINTING_DEVICE_RIGHT
 #define CIRQUE_PINNACLE_ADDR 0x2A
 #define CIRQUE_PINNACLE_POSITION_MODE CIRQUE_PINNACLE_ABSOLUTE_MODE
 #define CIRQUE_PINNACLE_DIAMETER_MM 40
@@ -137,6 +141,15 @@ qmk compile -kb lily58/rev1 -km miguel
 3. ❌ **NO habilitar POINTING_DEVICE_GESTURES_CURSOR_GLIDE_ENABLE** - Usuario lo desactivó expresamente
 4. ❌ **NO sugerir doble tap en Shift para Caps Lock** - Se removió porque era problemático
 5. ❌ **NO usar macros de Unicode** - Fallaron con ibus, usar Compose Key en su lugar
+6. ❌ **NO quitar `SPLIT_POINTING_ENABLE` ni `POINTING_DEVICE_RIGHT`** - El trackpad está en la mitad esclava; sin esos defines deja de funcionar por completo
+7. ❌ **NO anclar la rotación del OLED a `is_keyboard_master()`** - Va anclada a `is_keyboard_left()`, porque la orientación depende de cómo está montada físicamente cada pantalla
+
+### ⚠️ ESPACIO EN FLASH
+
+El firmware está al **94% (27114/28672 bytes, ~1.5 KB libres)** en el atmega32u4. Antes de agregar
+cualquier feature, considera que cada bitmap OLED cuesta **512 bytes**. Si no cabe, hay margen fácil en:
+- `TD_A_ACUTE` está definido pero nunca se usa en el keymap (la `A` es `LSFT_T(KC_A)`) — es código muerto
+- `rgb_state_reader.c` y `logo_reader.c` siguen en `SRC` sin usarse
 
 ### LO QUE SIEMPRE DEBES HACER:
 
@@ -156,18 +169,26 @@ qmk compile -kb lily58/rev1 -km miguel
 - **4 bitmaps PROGMEM** (`byakko_logo[]`, `seiryu_logo[]`, `suzaku_logo[]`, `genbu_logo[]`)
 - Lógica del trackpad (`pointing_device_task_user()`)
 
-**Líneas importantes:**
+**Líneas importantes** (aproximadas — verificar con `grep` antes de confiar):
 - Línea 11-18: Enum de Tap Dance (solo vocales y ñ, NO hay TD_LSHIFT_CAPS)
 - Línea 95-102: Definiciones de Tap Dance
 - Línea 121-127: QWERTY layer con Home Row Mods
-- Línea 195-228: Funciones de timing para Home Row Mods
-- Línea 234-469: Bitmaps OLED de las 4 bestias divinas (512 bytes cada uno)
-- Línea 470-485: Código OLED con switch por capa (`oled_task_user()`)
+- Línea 195-243: Timing de Home Row Mods (`get_tapping_term`, `get_quick_tap_term`, `get_hold_on_other_key_press`)
+- Línea 251-392: Bitmaps OLED de las 4 bestias divinas (512 bytes cada uno)
+- Línea 398-428: Lógica del trackpad (`pointing_device_task_user`) — Shift+tap = clic derecho, Shift+mover = drag
+- Línea 433-439: `oled_init_user()` — rotación anclada a `is_keyboard_left()`, NO a `is_keyboard_master()`
+- Línea 451-480: Código OLED con switch por capa (`oled_task_user()`)
 
 ### lib/ (Librerías OLED)
-Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
-- `layer_state_reader.c` — Nombre de la capa activa (usado en pantalla derecha)
-- `keylogger.c` — Última tecla presionada + historial de 20 teclas (pantalla derecha)
+
+> ⚠️ **OJO con la ubicación.** `lib/` **NO** vive en el directorio del keymap. Los archivos reales están en
+> `~/qmk_firmware/keyboards/lily58/lib/` (nivel teclado); el `SRC += ./lib/...` de `rules.mk` se resuelve ahí.
+> La copia en `~/lily58/keymap/lib/` es solo un respaldo, y **`sync.sh` no la actualiza** (solo copia
+> del keymap al repo). Si editas un reader, hazlo en QMK y copia a mano al repo.
+
+Funciones disponibles para la pantalla OLED:
+- `layer_state_reader.c` — Nombre de la capa activa (**en uso**, pantalla derecha/offhand)
+- `keylogger.c` — Última tecla + historial de 20 teclas (**desactivado**: solo funciona en el master, y el master ahora muestra las bestias)
 - `logo_reader.c` — Logo QMK (respaldo, no usado actualmente)
 - `host_led_state_reader.c` — Estado de Caps/Num/Scroll Lock (no usado)
 - `mode_icon_reader.c` — Icono de modo Mac/Windows (no usado)
@@ -178,10 +199,11 @@ Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
 
 ### config.h
 - Configuración de Home Row Mods (líneas 23-28)
-- Configuración del trackpad Cirque (líneas 50-58)
-- `MASTER_RIGHT` (línea 46)
-- `SPLIT_LAYER_STATE_ENABLE` (línea 49) — **Sincroniza estado de capa al lado offhand**
-- RGB lighting (líneas 30-45)
+- `MASTER_LEFT` (línea 47) — el USB va en la mitad izquierda
+- `SPLIT_LAYER_STATE_ENABLE` (línea 51) — **Sincroniza estado de capa al lado offhand (derecho)**
+- `SPLIT_POINTING_ENABLE` + `POINTING_DEVICE_RIGHT` (líneas 57-58) — **el trackpad está en la mitad esclava; sin esto no funciona**
+- Configuración del trackpad Cirque (líneas 60-65)
+- RGB lighting (líneas 30-45) — nota: `RGBLIGHT_ENABLE = no` en rules.mk, así que esto no hace nada
 
 ### rules.mk
 - Features habilitadas:
@@ -226,7 +248,7 @@ Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
 1. Edita `oled_task_user()` en `keymap.c` (líneas 470–485)
 2. Funciones disponibles:
    - `read_layer_state()` — capa activa
-   - `read_keylog()` / `read_keylogs()` — última tecla e historial
+   - `read_keylog()` / `read_keylogs()` — última tecla e historial (**solo sirven en el master**; hay que reactivar `keylogger.c` en `SRC` y volver a llamar `set_keylog()` desde `process_record_user()`)
    - `read_logo()` — logo QMK
    - `read_host_led_state()` — estado Caps/Num/Scroll Lock
    - `read_mode_icon(swap)` — icono Mac/Windows
@@ -250,8 +272,9 @@ Archivos en `keymap/lib/` que proveen funciones para la pantalla OLED:
 - Verifica que flasheaste el lado correcto (trackpad = derecho = master)
 
 ### Trackpad no funciona:
-- Verifica MASTER_RIGHT en config.h
-- Verifica que ambos lados estén flasheados
+- Verifica que `MASTER_LEFT`, `SPLIT_POINTING_ENABLE` y `POINTING_DEVICE_RIGHT` estén en config.h
+- Verifica que ambos lados estén flasheados (el trackpad es esclavo: si la mitad derecha tiene firmware viejo, no manda nada)
+- Verifica que el cable TRRS esté bien conectado — el reporte del trackpad viaja por ahí
 - Revisa que el cable I2C del trackpad esté bien conectado
 
 ### Home Row Mods se activan por error:
@@ -287,6 +310,10 @@ Miguel prefiere:
 
 ---
 
-**Última actualización:** 2026-04-24
+**Última actualización:** 2026-07-30
 
-**Estado actual:** Configuración estable con OLED personalizado. Las 4 bestias divinas (白虎/青龍/朱雀/玄武) se muestran dinámicamente según la capa activa. Trackpad funcionando con sensibilidad 2X.
+**Estado actual:** El cable USB se movió de la mitad derecha a la **izquierda** (`MASTER_LEFT`). El trackpad
+sigue físicamente en la derecha, ahora esclava, y transmite por TRRS vía `SPLIT_POINTING_ENABLE` +
+`POINTING_DEVICE_RIGHT`. Las 4 bestias divinas (白虎/青龍/朱雀/玄武) se muestran ahora en el OLED
+**izquierdo** (master) y el nombre de la capa en el **derecho**; el keylogger quedó desactivado.
+Trackpad con sensibilidad 2X. Firmware al 94% de flash.
